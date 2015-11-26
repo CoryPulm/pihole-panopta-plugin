@@ -26,7 +26,7 @@ class PiHolePlugin(agent_util.Plugin):
                 "options": None,
                 "status": status,
                 "error_message": msg,
-                "unit": None
+                "unit": 'ads'
             },
             "ad_traffic.today": {
                 "label": "Percent of network traffic from ads",
@@ -35,12 +35,12 @@ class PiHolePlugin(agent_util.Plugin):
                 "error_message": msg,
                 "unit": "percent"
             },
-            "blacklisted_domains": {
-                "label": "Number of known ad domains",
+            "dns_queries.today": {
+                "label": "Number of DNS queries to Pi Hole",
                 "options": None,
                 "status": status,
                 "error_message": msg,
-                "unit": None
+                "unit": "queries"
             }
         }
         return metadata
@@ -48,7 +48,6 @@ class PiHolePlugin(agent_util.Plugin):
     def check(self, textkey, data, config):
         ret, blocked = agent_util.execute_command("1m=$(date \"+%b %e\");cat /var/log/pihole.log | awk  '/\/etc\/pihole\/gravity.list/ {print $6}' | wc -l")
         ret, queries = agent_util.execute_command("today=$(date \"+%b %e\");cat /var/log/pihole.log | awk '/query/ {print $6}' | wc -l")
-        ret, bldom = agent_util.execute_command("wc -l /etc/pihole/gravity.list")
         # Should really make this a bit faster/leaner but this is pretty fast and uncomplicated.
         if textkey == 'blocked.today':
             return float(blocked)
@@ -56,7 +55,7 @@ class PiHolePlugin(agent_util.Plugin):
         if textkey == 'ad_traffic.today':
             return ((float(blocked) / float(queries)) * 100.0)
 
-        if textkey == 'blacklisted_domains':
-            return float(bldom.split()[0])
+        if textkey == 'dns_queries.today':
+            return float(queries)
 
         return 0
